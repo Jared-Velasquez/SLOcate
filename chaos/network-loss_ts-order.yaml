@@ -1,0 +1,17 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-loss-ts-order
+  namespace: chaos-mesh
+spec:
+  action: loss
+  mode: all
+  selector:
+    namespaces:
+      - ts
+    labelSelectors:
+      app: ts-order-service
+  loss:
+    loss: "30"
+    correlation: "25"
+  duration: "3m"

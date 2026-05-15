@@ -1,0 +1,17 @@
+# NOTE: HTTPChaos has no per-request percentage knob. mode: all applies to all matching pods for the duration; this approximates 'inject 50% of requests' only in the time-integral sense. See docs/architecture.md §10.2.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: http-delay-ts-auth
+  namespace: chaos-mesh
+spec:
+  mode: all
+  selector:
+    namespaces:
+      - ts
+    labelSelectors:
+      app: ts-auth-service
+  target: Request
+  port: 8080
+  delay: "2s"
+  duration: "3m"
