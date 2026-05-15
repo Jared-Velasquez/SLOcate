@@ -177,5 +177,14 @@ pyrightconfig.json
 
 .DS_Store
 
-docs/
 CLAUDE.md
+
+.claude/settings.local.json
+
+# Eval + model artifacts (gitignored per architecture §6)
+eval/
+models/
+data/
+
+# Logs from the shim
+shim.log
