@@ -1,0 +1,17 @@
+# experiments/re2tt-replication.yaml
+fault_duration_s: 180          # 3 min
+recovery_s: 120                # 2 min between faults
+replicates_per_combo: 3
+services:
+  - ts-auth-service
+  - ts-order-service
+  - ts-route-service
+  - ts-train-service
+  - ts-travel-service
+faults:
+  - { type: cpu,           template: "chaos/cpu_{service}.yaml" }
+  - { type: memory,        template: "chaos/memory_{service}.yaml" }
+  - { type: network-delay, template: "chaos/network-delay_{service}.yaml" }
+  - { type: network-loss,  template: "chaos/network-loss_{service}.yaml" }
+  - { type: http-error,    template: "chaos/http-error_{service}.yaml" }
+  - { type: http-delay,    template: "chaos/http-delay_{service}.yaml" }
