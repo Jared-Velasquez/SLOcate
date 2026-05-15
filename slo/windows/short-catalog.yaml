@@ -1,0 +1,23 @@
+# slo/windows/short-catalog.yaml — fed to sloth via --slo-period-windows-path
+apiVersion: sloth.slok.dev/v1
+kind: AlertWindows
+spec:
+  sloPeriod: 30d
+  page:
+    quick:
+      errorBudgetPercent: 2
+      shortWindow: 1m
+      longWindow:  5m
+    slow:
+      errorBudgetPercent: 5
+      shortWindow: 3m
+      longWindow:  15m
+  ticket:
+    quick:
+      errorBudgetPercent: 10
+      shortWindow: 3m
+      longWindow:  15m
+    slow:
+      errorBudgetPercent: 10
+      shortWindow: 3m
+      longWindow:  15m
