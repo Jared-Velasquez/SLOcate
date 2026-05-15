@@ -1,0 +1,18 @@
+# NOTE: HTTPChaos has no per-request percentage knob. mode: all applies to all matching pods for the duration; this approximates 'inject 50% of requests' only in the time-integral sense. See docs/architecture.md §10.2.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: http-error-ts-travel
+  namespace: chaos-mesh
+spec:
+  mode: all
+  selector:
+    namespaces:
+      - ts
+    labelSelectors:
+      app: ts-travel-service
+  target: Response
+  port: 8080
+  replace:
+    code: 500
+  duration: "3m"

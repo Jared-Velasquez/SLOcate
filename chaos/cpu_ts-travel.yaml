@@ -1,0 +1,17 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: cpu-ts-travel
+  namespace: chaos-mesh
+spec:
+  mode: all
+  selector:
+    namespaces:
+      - ts
+    labelSelectors:
+      app: ts-travel-service
+  stressors:
+    cpu:
+      workers: 4
+      load: 100
+  duration: "3m"

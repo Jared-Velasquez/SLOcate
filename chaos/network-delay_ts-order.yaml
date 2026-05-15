@@ -1,0 +1,18 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-delay-ts-order
+  namespace: chaos-mesh
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - ts
+    labelSelectors:
+      app: ts-order-service
+  delay:
+    latency: "1s"
+    jitter: "100ms"
+    correlation: "25"
+  duration: "3m"
