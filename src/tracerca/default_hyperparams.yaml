@@ -1,0 +1,14 @@
+# default hyperparams - keep aligned with TraceRCA-CD/RE2TT runs
+# See docs/architecture.md §3.4.
+isolation_forest:
+  contamination: 0.01
+  n_jobs: 10
+threshold:
+  sigma: 1
+feature_selection:
+  fisher_cutoff: 3
+localization:
+  min_support_rate: 0.1
+  k: 100
+  forbidden_names: ["gateway"]
+  caller_discount_alpha: 1.5
