@@ -1,0 +1,47 @@
+# deploy/compose/docker-compose.yaml
+services:
+  tempo:
+    image: grafana/tempo:2.10.5
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "3200:3200"
+    volumes:
+      - ./tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.5
+    ports: ["9090:9090"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../slo/generated:/etc/prometheus/rules:ro
+      - prom-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    # macOS + Docker Desktop: host.docker.internal resolves natively; extra_hosts below is the Linux fallback (host-gateway) and is harmless on macOS.
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    ports: ["9093:9093"]
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    # macOS + Docker Desktop: host.docker.internal resolves natively; extra_hosts below is the Linux fallback (host-gateway) and is harmless on macOS.
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    restart: unless-stopped
+
+  # Shim runs on the host directly (Python stdlib only). See §3.5.
+  # The container path is intentionally avoided so it can shell out to
+  # the trainer/inference CLI without container nesting.
+
+volumes:
+  tempo-data: {}
+  prom-data:  {}

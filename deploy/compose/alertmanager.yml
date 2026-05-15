@@ -1,0 +1,24 @@
+# deploy/compose/alertmanager.yml
+global:
+  resolve_timeout: 1m
+
+route:
+  receiver: noop
+  group_by: ["service_name"]
+  group_wait: 5s
+  group_interval: 30s
+  repeat_interval: 1h
+  routes:
+    - matchers: [ 'sloth_severity =~ "page|ticket"' ]
+      receiver: rca-shim
+      continue: false
+
+receivers:
+  - name: noop
+  - name: rca-shim
+    webhook_configs:
+      # macOS + Docker Desktop: host.docker.internal resolves natively.
+      # Linux fallback: add `extra_hosts: ["host.docker.internal:host-gateway"]` to the alertmanager service in docker-compose.yaml.
+      - url: http://host.docker.internal:8080/webhook
+        send_resolved: true
+        max_alerts: 0

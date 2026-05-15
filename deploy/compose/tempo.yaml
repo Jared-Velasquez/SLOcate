@@ -1,0 +1,39 @@
+# deploy/compose/tempo.yaml — mounted into the Tempo container at /etc/tempo/tempo.yaml
+server:
+  http_listen_address: 0.0.0.0
+  http_listen_port: 3200
+  grpc_listen_address: 0.0.0.0
+  grpc_listen_port: 9095
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc: { endpoint: 0.0.0.0:4317 }
+        http: { endpoint: 0.0.0.0:4318 }
+
+ingester:
+  lifecycler: { ring: { replication_factor: 1 } }
+  trace_idle_period: 10s
+  max_block_duration: 5m
+  flush_check_period: 10s
+
+compactor:
+  compaction: { block_retention: 24h }
+
+storage:
+  trace:
+    backend: local
+    local: { path: /var/tempo/traces }
+    wal:   { path: /var/tempo/wal }
+
+query_frontend:
+  search:
+    duration_slo: 5s
+    throughput_bytes_slo: 1.073741824e+09
+
+metrics_generator:
+  processors: []
+  storage: { path: /var/tempo/generator/wal }
+
+usage_report: { reporting_enabled: false }
