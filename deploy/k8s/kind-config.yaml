@@ -1,0 +1,11 @@
+# deploy/k8s/kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: tracerca
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.35.0@sha256:452d707d4862f52530247495d180205e029056831160e22870e37e3f6c1ac31f
+    extraPortMappings:
+      - { containerPort: 30889, hostPort: 8889,  protocol: TCP }  # OTel Collector /metrics
+      - { containerPort: 30080, hostPort: 30080, protocol: TCP }  # ts-ui-dashboard
+      - { containerPort: 30233, hostPort: 2333,  protocol: TCP }  # Chaos Mesh dashboard

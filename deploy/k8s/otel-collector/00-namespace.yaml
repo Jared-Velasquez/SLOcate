@@ -1,0 +1,4 @@
+# deploy/k8s/otel-collector/00-namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata: { name: observability }
