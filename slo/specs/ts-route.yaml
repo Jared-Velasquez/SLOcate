@@ -1,0 +1,45 @@
+# slo/specs/ts-route.yaml — Sloth-native v1
+version: "prometheus/v1"
+service: "ts-route-service"
+labels:
+  team: "trains"
+  service_name: "ts-route-service"   # OTel semantic convention; AM routes on this
+slos:
+  - name: "availability"
+    objective: 99.0
+    description: "99% of ts-route-service spans complete with status.code != STATUS_CODE_ERROR"
+    sli:
+      events:
+        error_query: |
+          sum(rate(traces_spanmetrics_calls_total{
+            service_name="ts-route-service",
+            status_code="STATUS_CODE_ERROR"
+          }[{{.window}}]))
+        total_query: |
+          sum(rate(traces_spanmetrics_calls_total{
+            service_name="ts-route-service"
+          }[{{.window}}]))
+    alerting:
+      name: TsRouteAvailability
+      labels:    { service_name: "ts-route-service", slo_kind: "availability" }
+      page_alert:   { labels: { severity: "page" } }
+      ticket_alert: { labels: { severity: "ticket" } }
+
+  - name: "latency-p99-500ms"
+    objective: 99.0
+    description: "99% of ts-route-service spans complete under 500ms"
+    sli:
+      events:
+        error_query: |
+          (
+            sum(rate(traces_spanmetrics_duration_milliseconds_count{service_name="ts-route-service"}[{{.window}}]))
+            -
+            sum(rate(traces_spanmetrics_duration_milliseconds_bucket{service_name="ts-route-service",le="500"}[{{.window}}]))
+          )
+        total_query: |
+          sum(rate(traces_spanmetrics_duration_milliseconds_count{service_name="ts-route-service"}[{{.window}}]))
+    alerting:
+      name: TsRouteLatencyP99
+      labels:    { service_name: "ts-route-service", slo_kind: "latency" }
+      page_alert:   { labels: { severity: "page" } }
+      ticket_alert: { labels: { severity: "ticket" } }

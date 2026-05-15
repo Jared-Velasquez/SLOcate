@@ -1,0 +1,46 @@
+# Post-deploy: verify `status_code` label value matches `STATUS_CODE_ERROR` against the live /metrics scrape; if the spanmetrics feature gate `useOtelPrefix` is on, change to `otel_status_code`.
+# slo/specs/ts-order.yaml — Sloth-native v1
+version: "prometheus/v1"
+service: "ts-order-service"
+labels:
+  team: "trains"
+  service_name: "ts-order-service"   # OTel semantic convention; AM routes on this
+slos:
+  - name: "availability"
+    objective: 99.0
+    description: "99% of ts-order-service spans complete with status.code != STATUS_CODE_ERROR"
+    sli:
+      events:
+        error_query: |
+          sum(rate(traces_spanmetrics_calls_total{
+            service_name="ts-order-service",
+            status_code="STATUS_CODE_ERROR"
+          }[{{.window}}]))
+        total_query: |
+          sum(rate(traces_spanmetrics_calls_total{
+            service_name="ts-order-service"
+          }[{{.window}}]))
+    alerting:
+      name: TsOrderAvailability
+      labels:    { service_name: "ts-order-service", slo_kind: "availability" }
+      page_alert:   { labels: { severity: "page" } }
+      ticket_alert: { labels: { severity: "ticket" } }
+
+  - name: "latency-p99-500ms"
+    objective: 99.0
+    description: "99% of ts-order-service spans complete under 500ms"
+    sli:
+      events:
+        error_query: |
+          (
+            sum(rate(traces_spanmetrics_duration_milliseconds_count{service_name="ts-order-service"}[{{.window}}]))
+            -
+            sum(rate(traces_spanmetrics_duration_milliseconds_bucket{service_name="ts-order-service",le="500"}[{{.window}}]))
+          )
+        total_query: |
+          sum(rate(traces_spanmetrics_duration_milliseconds_count{service_name="ts-order-service"}[{{.window}}]))
+    alerting:
+      name: TsOrderLatencyP99
+      labels:    { service_name: "ts-order-service", slo_kind: "latency" }
+      page_alert:   { labels: { severity: "page" } }
+      ticket_alert: { labels: { severity: "ticket" } }
