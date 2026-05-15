@@ -1,0 +1,70 @@
+# deploy/k8s/otel-collector/10-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: otel-collector-config, namespace: observability }
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc: { endpoint: 0.0.0.0:4317 }
+          http: { endpoint: 0.0.0.0:4318 }
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 75
+        spike_limit_percentage: 20
+      probabilistic_sampler:
+        sampling_percentage: 100   # 100 / 10 / 1 — sampling-sweep knob
+        hash_seed: 22
+      resource:
+        attributes:
+          - { key: deployment.environment, value: capstone, action: upsert }
+      batch:
+        send_batch_size: 1024
+        timeout: 2s
+
+    connectors:
+      spanmetrics:
+        histogram:
+          explicit:
+            buckets: [1ms, 2ms, 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2s, 5s, 10s]
+          unit: ms
+        dimensions:
+          - { name: service.name }
+          - { name: span.kind }
+          - { name: status.code }
+        exemplars: { enabled: true }
+        metrics_flush_interval: 15s
+        aggregation_temporality: AGGREGATION_TEMPORALITY_CUMULATIVE
+        namespace: traces.spanmetrics
+
+    exporters:
+      # Linux fallback: run kind nodes with `--add-host host.docker.internal=host-gateway` (or compose `extra_hosts: ["host.docker.internal:host-gateway"]`).
+      otlp/tempo:
+        endpoint: host.docker.internal:4317   # Linux: replace with 172.17.0.1:4317
+        tls: { insecure: true }
+        sending_queue: { enabled: true, queue_size: 1000 }
+        retry_on_failure: { enabled: true }
+      prometheus:
+        endpoint: 0.0.0.0:8889
+        enable_open_metrics: true
+        resource_to_telemetry_conversion: { enabled: true }
+
+    extensions:
+      health_check: { endpoint: 0.0.0.0:13133 }
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers:  [otlp]
+          processors: [memory_limiter, probabilistic_sampler, resource, batch]
+          exporters:  [otlp/tempo, spanmetrics]
+        metrics:
+          receivers:  [spanmetrics]
+          processors: [batch]
+          exporters:  [prometheus]
+      telemetry:
+        metrics: { level: basic }

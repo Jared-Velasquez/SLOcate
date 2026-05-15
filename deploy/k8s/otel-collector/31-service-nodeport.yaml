@@ -1,0 +1,9 @@
+# deploy/k8s/otel-collector/31-service-nodeport.yaml (host Prom scrapes here)
+apiVersion: v1
+kind: Service
+metadata: { name: otel-collector-prom, namespace: observability }
+spec:
+  type: NodePort
+  selector: { app: otel-collector }
+  ports:
+    - { name: prom, port: 8889, targetPort: 8889, nodePort: 30889 }

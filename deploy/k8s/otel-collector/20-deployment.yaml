@@ -1,0 +1,29 @@
+# deploy/k8s/otel-collector/20-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: otel-collector, namespace: observability, labels: { app: otel-collector } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: otel-collector } }
+  template:
+    metadata: { labels: { app: otel-collector } }
+    spec:
+      containers:
+        - name: otelcol
+          image: otel/opentelemetry-collector-contrib:0.152.0
+          args: ["--config=/etc/otelcol/config.yaml"]
+          ports:
+            - { name: otlp-grpc, containerPort: 4317 }
+            - { name: otlp-http, containerPort: 4318 }
+            - { name: prom,      containerPort: 8889 }
+            - { name: health,    containerPort: 13133 }
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          volumeMounts:
+            - { name: cfg, mountPath: /etc/otelcol }
+          readinessProbe:
+            httpGet: { path: /, port: 13133 }
+            initialDelaySeconds: 5
+      volumes:
+        - { name: cfg, configMap: { name: otel-collector-config } }
